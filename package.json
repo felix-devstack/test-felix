@@ -1,0 +1,59 @@
+{
+  "name": "app-template",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build",
+    "lint": "vue-cli-service lint",
+    "deploy:dev": "DEPLOY_ENV=dev DEPLOY_DATE=`date` SLS_DEBUG='*' sls deploy",
+    "es-check": "es-check es5 './dist/**/*.js'",
+    "test": "jest --verbose",
+    "test:acceptance": "dotenv -- testcafe 'browserstack:ie@11.0:Windows 10' tests/acceptance/ --app 'yarn serve --port 9090'",
+    "test:circle": "NODE_ENV=test JEST_HTML_REPORTER_OUTPUT_PATH=test-results/report.html JEST_JUNIT_OUTPUT=test-results/report.xml npm test -- --no-cache --reporters=default --reporters=jest-html-reporter --reporters=jest-junit --coverage --coverageReporters html --coverageDirectory=test-results/coverage/"
+  },
+  "dependencies": {
+    "@babel/polyfill": "^7.2.5",
+    "axios": "^0.18.0",
+    "legal-gateway-apps": "ssh://git@github.com:Plexlogic/legal-gateway-apps.git",
+    "lodash.debounce": "^4.0.8",
+    "lodash.get": "^4.4.2",
+    "query-string": "^6.2.0",
+    "stylus": "^0.54.5",
+    "stylus-loader": "^3.0.2",
+    "vue": "^2.5.21",
+    "vue-router": "^3.0.2",
+    "vuetify": "^1.4.1"
+  },
+  "devDependencies": {
+    "@vue/cli-plugin-babel": "^3.3.0",
+    "@vue/cli-plugin-eslint": "^3.3.0",
+    "@vue/cli-plugin-unit-jest": "^3.3.0",
+    "@vue/cli-service": "^3.3.0",
+    "@vue/test-utils": "^1.0.0-beta.28",
+    "babel-core": "^7.0.0-bridge.0",
+    "babel-jest": "^24.0.0",
+    "compression-webpack-plugin": "^3.0.0",
+    "dotenv-cli": "^2.0.1",
+    "es-check": "^5.0.0",
+    "http-server": "^0.11.1",
+    "husky": "^3.0.3",
+    "jest": "^24.0.0",
+    "jest-html-reporter": "^2.4.2",
+    "jest-junit": "^6.2.1",
+    "node-sass": "^4.11.0",
+    "sass-loader": "^7.0.1",
+    "serverless": "^1.35.1",
+    "serverless-s3-sync": "^1.7.0",
+    "testcafe": "^1.4.1",
+    "testcafe-browser-provider-browserstack": "^1.9.0",
+    "vue-cli-plugin-pug": "^1.0.7",
+    "vue-cli-plugin-vuetify": "^0.4.6",
+    "vue-template-compiler": "^2.5.21"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "NODE_ENV=production yarn build && yarn es-check"
+    }
+  }
+}

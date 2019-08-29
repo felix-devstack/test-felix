@@ -1,0 +1,138 @@
+version: 2.1
+
+references:
+  container_config: &container_config
+    docker:
+      - image: circleci/node:8
+        environment:
+            TZ: "/usr/share/zoneinfo/Australia/Melbourne"
+  node_modules_cache_key: &node_modules_cache_key
+    node-deps-{{ .Environment.frontendCacheVersion }}-{{ .Branch }}-{{ checksum "package.json" }}
+  restore_node_cache: &restore_node_cache
+    restore_cache:
+      keys:
+        - *node_modules_cache_key
+
+commands:
+  deploy:
+    description: "Reusable command to deploy"
+    parameters:
+      deploy_env:
+        type: string
+    steps:
+      - checkout
+      - *restore_node_cache
+      - run:
+          name: Install node dependencies
+          command: yarn
+      - save_cache:
+          key: *node_modules_cache_key
+          paths:
+            - ./node_modules
+            - ~/.cache/yarn
+      - run:
+          name: Build bundles
+          command: |
+              export NODE_ENV="production" DEPLOY_ENV="<< parameters.deploy_env >>"
+              yarn build
+      - run:
+          name: Deploy to AWS << parameters.deploy_env >>
+          command: |
+              export DEPLOY_ENV="<< parameters.deploy_env >>" DEPLOY_DATE=`date`
+              ./scripts/create-info.js
+              ./node_modules/.bin/sls deploy --region ap-southeast-2  
+
+jobs:
+  tests:
+    docker:
+      - image: circleci/node:8
+    steps:
+      - checkout
+      - restore_cache:
+          key: *node_modules_cache_key
+      - run:
+          name: Install frontend dependencies
+          command: yarn
+      - run:
+          name: Run tests
+          command: yarn test:circle
+      - save_cache:
+          key: *node_modules_cache_key
+          paths:
+            - ./node_modules
+            - ~/.cache/yarn
+      - store_test_results:
+          path: ./test-results
+      - store_artifacts:
+          path: ./test-results
+          destination: tr1
+
+  deploy-dev:
+    <<: *container_config
+    steps:
+      - deploy:
+            deploy_env: "dev"
+
+  deploy-staging:
+    <<: *container_config
+    steps:
+      - deploy:
+            deploy_env: "staging"
+
+  deploy-prod:
+    <<: *container_config
+    steps:
+      - deploy:
+            deploy_env: "production"
+
+  deploy-sandbox:
+    <<: *container_config
+    steps:
+      - deploy:
+            deploy_env: "sandbox"
+
+  deploy-demo:
+    <<: *container_config
+    steps:
+      - deploy:
+            deploy_env: "demo"
+
+workflows:
+  version: 2
+  test-deploy-staging-prod:
+    jobs:
+      - tests
+      - deploy-dev:
+          requires:
+            - tests
+      - approve-staging-deploy:
+          type: approval
+          requires:
+            - deploy-dev
+      - deploy-staging:
+          requires:
+            - approve-staging-deploy
+      - approve-demo-deploy:
+          type: approval
+          requires:
+            - deploy-dev
+            - deploy-staging
+      - deploy-demo:
+          requires:
+            - approve-demo-deploy
+      - approve-prod-deploy:
+          type: approval
+          requires:
+            - deploy-dev
+            - deploy-staging
+      - deploy-prod:
+          requires:
+            - approve-prod-deploy
+      - approve-sandbox-deploy:
+          type: approval
+          requires:
+            - deploy-dev
+            - deploy-staging
+      - deploy-sandbox:
+          requires:
+            - approve-sandbox-deploy

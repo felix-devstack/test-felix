@@ -1,0 +1,30 @@
+service: 
+  name: app-template
+
+plugins:
+  - serverless-s3-sync
+
+provider:
+  name: aws
+  stackName: legalgateway-apps
+  runtime: python3.6
+  region: ap-southeast-2
+  bucketName: legal-gateway-app-${env:DEPLOY_ENV}
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+      - "s3:ListBucket"
+      Resource: "arn:aws:s3:::${self:provider.bucketName}"
+    - Effect: "Allow"
+      Action:
+      - "s3:PutObject"
+      Resource: "arn:aws:s3:::${self:provider.bucketName}"
+
+custom:
+  s3Sync:
+    - bucketName: ${self:provider.bucketName}
+      localDir: dist/
+      bucketPrefix: ${self:service.name}
+      params:
+        - index.html:
+            CacheControl: 'max-age=0'
