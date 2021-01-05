@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@babel/polyfill": "^7.2.5",
-    "axios": "^0.18.0",
+    "axios": "^0.21.1",
     "legal-gateway-apps": "ssh://git@github.com:Plexlogic/legal-gateway-apps.git",
     "lodash.debounce": "^4.0.8",
     "lodash.get": "^4.4.2",
