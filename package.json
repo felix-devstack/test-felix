@@ -41,7 +41,7 @@
     "jest": "^24.0.0",
     "jest-html-reporter": "^2.4.2",
     "jest-junit": "^6.2.1",
-    "node-sass": "^4.11.0",
+    "node-sass": "^7.0.0",
     "sass-loader": "^7.0.1",
     "serverless": "^1.35.1",
     "serverless-s3-sync": "^1.7.0",
